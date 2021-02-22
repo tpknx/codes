@@ -1,0 +1,186 @@
+# Auto Fib V1.3
+# tomsk
+# 11.19.2019
+
+# Automatically draws fibonacci retracements using the highest price and lowest price 
+# from the current view and timeframe.
+#
+# Fibonacci retracements use horizontal lines to indicate areas of support or resistance 
+# at the key Fibonacci levels before it continues in the original direction. These levels 
+# are created by drawing a trendline between two extreme points and then dividing the 
+# vertical distance by the key Fibonacci ratios of: 23.6%, 38.2%, 50%, 61.8%, 78.6%, and 100%.
+
+# CHANGE LOG
+#
+# V1.0 - 12.18.2018 - BenTen       - Initial release of Auto Fib, created by Ryan Hendricks
+# V1.1 - 11.15.2019 - theelderwand - As script was difficult to read, made the following enhancements
+#                                    Expands to right
+#                                    Doesn't expand to left
+#                                    Custom colors for Fibonacci bars (0.618 is GOLD color)
+#                                    Custom line weights
+#                                    Code is modularized so you can add extra plots as needed
+# V1.2 - 11.15.2019 - tomsk        - Added an input selector for the colors of the label. You 
+#                                    can select from any of the colors listed - red, orange, 
+#                                    green, etc and bubbles for all the fib retracements will 
+#                                    utilize that color.
+# V1.3 - 11.19.2019 - tomsk        - Modified the AddChartBubbles to be displayed on the right
+#                                    side of the chart. Please ensure that you increase the
+#                                    expansion area to that the bubbles have room to be displayed
+#                                    Chart Settings > Time Axis > Expansion Area
+
+#hint Price: Price used in the alerts on crossing retracement lines. <b>(Default is Close)</b>
+
+#hint coefficient_0: Retracement Line 0: Retracement from the highest high to the lowest low.<b>(Default is 0%)</b>
+#hint Coefficient_1: Retracement Line 1: Retracement from the highest high to the lowest low.<b>(Default is 23.6%)</b>
+#hint Coefficient_2: Retracement Line 2: Retracement from the highest high to the lowest low.<b>(Default is 38.2%)</b>
+#hint Coefficient_3: Retracement Line 3: Retracement from the highest high to the lowest low.<b>(Default is 50%)</b>
+#hint Coefficient_4: Retracement Line 4: Retracement from the highest high to the lowest low.<b>(Default is 61.8%)</b>
+#hint Coefficient_5: Retracement Line 5: Retracement from the highest high to the lowest low.<b>(Default is 78.6%)</b>
+#hint Coefficient_6: Retracement Line 6: Retracement from the highest high to the lowest low.<b>(Default is 100%)</b>
+
+#wizard input: Price
+#wizard text: Inputs: Price:
+#wizard input: coefficient_0
+#wizard text: coefficient_0:
+#wizard input: Coefficient_1
+#wizard text: Coefficient_1:
+#wizard input: Coefficient_2
+#wizard text: Coefficient_2:
+#wizard input: Coefficient_3
+#wizard text: Coefficient_3:
+#wizard input: Coefficient_4
+#wizard text: Coefficient_4:
+#wizard input: Coefficient_5
+#wizard text: Coefficient_5:
+#wizard input: Coefficient_6
+#wizard text: Coefficient_6:
+
+input price = close;
+input high = high;
+input low = low;
+input coefficient_0 = 0.000;
+input coefficient_1 = .236;
+input Coefficient_2 = .382;
+input Coefficient_3 = .500;
+input Coefficient_4 = .618;
+Input Coefficient_5 = .786;
+input Coefficient_6 = 1.000;
+
+input LabelColor = {default "MAGENTA", "CYAN", "PINK", "LIGHT_GRAY", "ORANGE", "RED", "GREEN", "GRAY", "WHITE"};
+input n = 3;
+
+def n1  = n + 1;
+def a = HighestAll(high);
+def b = LowestAll(low);
+def barnumber = barNumber();
+def c = if high == a then barnumber else double.nan;
+def d = if low == b then barnumber else double.nan;
+rec highnumber = compoundValue(1, if IsNaN(c) then highnumber[1] else c, c);
+def highnumberall = HighestAll(highnumber);
+rec lownumber = compoundValue(1, if IsNaN(d) then lownumber[1] else d, d);
+def lownumberall = LowestAll(lownumber);
+
+def upward = highnumberall > lownumberall;
+def downward = highnumberall < lownumberall;
+
+def x = AbsValue(lownumberall - highnumberall );
+
+def slope = (a - b) / x;
+def slopelow = (b - a) / x;
+
+def day = getDay();
+def month = getMonth();
+def year = getYear();
+def lastDay = getLastDay();
+def lastmonth = getLastMonth();
+def lastyear = getLastYear();
+def isToday = if(day == lastDay and month == lastmonth and year == lastyear, 1, 0);
+def istodaybarnumber = HighestAll(if isToday then barnumber else double.nan);
+def line = b + (slope * (barnumber - lownumber));
+def linelow = a + (slopelow * (barnumber - highnumber));
+def currentlinelow = if barnumber <= lownumberall then linelow else double.nan;
+def currentline = if barnumber <= highnumberall then line else double.nan;
+
+Plot FibFan =  if  downward then currentlinelow else if upward then currentline else double.nan;
+FibFan.SetStyle(Curve.SHORT_DASH);
+FibFan.AssignValueColor(color.red);
+fibfan.hidebubble();
+
+def range =  a - b;
+
+def value0 = range * coefficient_0;
+def value1 = range * coefficient_1;
+def value2 = range * coefficient_2;
+def value3 = range * coefficient_3;
+def value4 = range * coefficient_4;
+def value5 = range * coefficient_5;
+def value6 = range * coefficient_6;
+
+def condition1 = downward and barnumber >= highnumberall;
+def condition2 = upward and barnumber >= lownumberall;
+
+Plot Retracement0 = if condition1 then highestall(b + value0) else if condition2 then highestall(a - value0) else double.nan;
+Plot Retracement1 = if condition1 then highestall(b + value1) else if condition2 then highestall(a - value1) else double.nan;
+Plot Retracement2 = if condition1 then highestall(b + value2) else if condition2 then highestall(a - value2) else double.nan;
+Plot Retracement3 = if condition1 then highestall(b + value3) else if condition2 then highestall(a - value3) else double.nan;
+Plot Retracement4 = if condition1 then highestall(b + value4) else if condition2 then highestall(a - value4) else double.nan;
+Plot Retracement5 = if condition1 then highestall(b + value5) else if condition2 then highestall(a - value5) else double.nan;
+Plot Retracement6 = if condition1 then highestall(b + value6) else if condition2 then highestall(a - value6) else double.nan;
+
+Retracement0.assignvaluecolor(CreateColor(255,255,255));
+Retracement0.setLineWeight(4);
+retracement0.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement0, concat( (coefficient_0 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement0, concat( (coefficient_0 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement1.assignvaluecolor(CreateColor(173,216,230));
+Retracement1.setLineWeight(2);
+retracement1.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement1, concat( (coefficient_1 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement1, concat( (coefficient_1 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement2.assignvaluecolor(CreateColor(0,197,49));
+Retracement2.setLineWeight(2);
+retracement2.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement2, concat( (coefficient_2 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement2, concat( (coefficient_2 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement3.assignvaluecolor(CreateColor(255,64,64));
+Retracement3.setLineWeight(3);
+retracement3.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement3, concat( (coefficient_3 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement3, concat( (coefficient_3 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement4.assignvaluecolor(CreateColor(255,215,0));
+Retracement4.setLineWeight(5);
+retracement4.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement4, concat( (coefficient_4 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement4, concat( (coefficient_4 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement5.assignvaluecolor(CreateColor(0,255,255));
+Retracement5.setLineWeight(2);
+retracement5.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement5, concat( (coefficient_5 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement5, concat( (coefficient_5 * 100), "%"), GetColor(LabelColor), yes);
+
+Retracement6.assignvaluecolor(CreateColor(255,255,255));
+Retracement6.setLineWeight(4);
+Retracement6.hidebubble();
+AddChartBubble((downward and close[n1]) and IsNaN(close[n]), retracement6, concat( (coefficient_6 * 100), "%"), GetColor(LabelColor), yes);
+AddChartBubble((upward and close[n1]) and IsNaN(close[n]), retracement6, concat( (coefficient_6 * 100), "%"), GetColor(LabelColor), yes);
+
+alert((price crosses below Retracement0) , "Price crosses below Retracement Line 0");
+alert((price crosses above Retracement0) , "Price crosses above Retracement Line 0");
+alert((price crosses below Retracement1) , "Price crosses below Retracement Line 1");
+alert((price crosses above Retracement1) , "Price crosses above Retracement Line 1");
+alert((price crosses below Retracement2) , "Price crosses below Retracement Line 2");
+alert((price crosses above Retracement2) , "Price crosses above Retracement Line 2");
+alert((price crosses below Retracement3) , "Price crosses below Retracement Line 3");
+alert((price crosses above Retracement3) , "Price crosses above Retracement Line 3");
+alert((price crosses below Retracement4) , "Price crosses below Retracement Line 4");
+alert((price crosses above Retracement4) , "Price crosses above Retracement Line 4");
+alert((price crosses below Retracement5) , "Price crosses below Retracement Line 5");
+alert((price crosses above Retracement5) , "Price crosses above Retracement Line 5");
+alert((price crosses below Retracement6) , "Price crosses below Retracement Line 6");
+alert((price crosses above Retracement6) , "Price crosses above Retracement Line 6");
+# End Auto Fib v1.3

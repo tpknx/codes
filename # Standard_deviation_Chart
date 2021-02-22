@@ -1,0 +1,61 @@
+# Standard_deviation_Chart
+
+input price = close;
+input deviations1 = 1.0;
+input deviations2 = 2.0;
+input deviations3 = 1.5;
+input deviations4 = 0.5;
+input fullRange = Yes;
+input length = 21;
+
+def regression;
+def stdDeviation;
+if (fullRange) {
+    regression = InertiaAll(price);
+    stdDeviation = stdevAll(price);
+} else {
+    regression = InertiaAll(price, length);
+    stdDeviation = stdevAll(price, length);
+}
+
+plot UpperLine = regression + deviations1 * stdDeviation;
+plot MiddleLine = regression;
+plot LowerLine = regression - deviations1 * stdDeviation;
+plot UpperLine2 = regression + deviations2 * stdDeviation;
+plot LowerLine2 = regression - deviations2 * stdDeviation;
+plot UpperLine3 = regression + deviations3 * stdDeviation;
+plot LowerLine3 = regression - deviations3 * stdDeviation;
+plot UpperLine4 = regression + deviations4 * stdDeviation;
+plot LowerLine4 = regression - deviations4 * stdDeviation;
+
+
+UpperLine.SetDefaultColor(GetColor(8));
+MiddleLine.SetDefaultColor(GetColor(8));
+LowerLine.SetDefaultColor(GetColor(8));
+UpperLine3.SetDefaultColor(GetColor(8));
+LowerLine3.SetDefaultColor(GetColor(8));
+
+UpperLine2.DefineColor("Up", GetColor(1));
+UpperLine2.DefineColor("Down", GetColor(0));
+UpperLine2.AssignValueColor(if UpperLine2 > UpperLine2[1] then UpperLine2.color("Up") else UpperLine2.color("Down"));
+
+LowerLine2.DefineColor("Up", GetColor(1));
+LowerLine2.DefineColor("Down", GetColor(0));
+LowerLine2.AssignValueColor(if LowerLine2 > LowerLine2[1] then LowerLine2.color("Up") else LowerLine2.color("Down"));
+
+UpperLine3.DefineColor("Up", GetColor(1));
+UpperLine3.DefineColor("Down", GetColor(0));
+UpperLine3.AssignValueColor(if UpperLine3 > UpperLine3[1] then UpperLine3.color("Up") else UpperLine3.color("Down"));
+
+LowerLine3.DefineColor("Up", GetColor(1));
+LowerLine3.DefineColor("Down", GetColor(0));
+LowerLine3.AssignValueColor(if LowerLine3 > LowerLine3[1] then LowerLine3.color("Up") else LowerLine3.color("Down"));
+
+UpperLine4.DefineColor("Up", GetColor(1));
+UpperLine4.DefineColor("Down", GetColor(0));
+UpperLine4.AssignValueColor(if UpperLine4 > UpperLine4[1] then UpperLine4.color("Up") else UpperLine4.color("Down"));
+
+LowerLine4.DefineColor("Up", GetColor(1));
+LowerLine4.DefineColor("Down", GetColor(0));
+LowerLine4.AssignValueColor(if LowerLine4 > LowerLine4[1] then LowerLine4.color("Up") else LowerLine4.color("Down"));
+
